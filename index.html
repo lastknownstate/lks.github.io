@@ -1,0 +1,718 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#07101d">
+  <meta name="color-scheme" content="dark">
+  <title>i30 // Night Garage</title>
+ 
+  <style>
+    /* ---------- Tokens ---------- */
+    :root {
+      --bg: #060b13;
+      --line: #22344c;
+      --text: #e7f0ff;
+      --muted: #8da2c0;
+      --blue: #438fe8;
+      --cyan: #69dcff;
+      --glow: 0 0 24px #2779d833;
+ 
+      --stage-night: radial-gradient(ellipse at 50% 55%, #1a3c63 0, #0a1727 44%, #050a12 82%);
+      --stage-blue-hour: radial-gradient(ellipse at 50% 55%, #31577b 0, #14273d 48%, #0a1320 85%);
+    }
+ 
+    /* ---------- Base ---------- */
+    *, *::before, *::after { box-sizing: border-box; }
+ 
+    html { scroll-behavior: smooth; }
+ 
+    body {
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      color: var(--text);
+      font: 15px/1.5 ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      background:
+        radial-gradient(ellipse at 70% -10%, #18335a 0, transparent 42%),
+        linear-gradient(180deg, #08111e, #050910 75%);
+    }
+ 
+    /* Background grid */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      opacity: .16;
+      background-image:
+        linear-gradient(#6ba4ff12 1px, transparent 1px),
+        linear-gradient(90deg, #6ba4ff12 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: linear-gradient(to bottom, black, transparent 80%);
+    }
+ 
+    .wrap {
+      width: min(1180px, calc(100% - 32px));
+      margin: auto;
+    }
+ 
+    /* ---------- Top bar ---------- */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 22px 0;
+      border-bottom: 1px solid var(--line);
+    }
+ 
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      letter-spacing: .1em;
+    }
+ 
+    .brand small {
+      display: block;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .2em;
+    }
+ 
+    .brandmark {
+      display: grid;
+      place-items: center;
+    }
+    .brandmark img {
+      width: 64px;
+      height: 64px;
+      object-fit: contain;
+}
+ 
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #a8bedb;
+      font-size: 11px;
+      letter-spacing: .1em;
+    }
+ 
+    .status-sep { color: #496481; }
+ 
+    .dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #65f2b2;
+      box-shadow: 0 0 10px #65f2b2;
+    }
+ 
+    /* ---------- Hero ---------- */
+    .hero {
+      display: grid;
+      gap: 18px;
+      padding: 42px 0 24px;
+    }
+ 
+    .eyebrow {
+      color: var(--cyan);
+      font-size: 11px;
+      letter-spacing: .22em;
+      text-transform: uppercase;
+    }
+ 
+    .hero h1 {
+      max-width: 800px;
+      margin: 12px 0 14px;
+      font-size: clamp(34px, 6vw, 68px);
+      line-height: .98;
+      letter-spacing: -.06em;
+    }
+ 
+    .hero h1 span {
+      color: #6aa9ff;
+      text-shadow: 0 0 24px #438fe844;
+    }
+ 
+    .intro {
+      max-width: 650px;
+      color: #a6b8d2;
+      font-size: 13px;
+    }
+ 
+    /* ---------- Garage viewer ---------- */
+    .garage {
+      position: relative;
+      overflow: hidden;
+      isolation: isolate;
+      border: 1px solid #284362;
+      border-radius: 8px;
+      background: #08111e;
+      box-shadow: 0 20px 70px #0008, var(--glow);
+    }
+ 
+    /* Scanline overlay */
+    .garage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      pointer-events: none;
+      background:
+        linear-gradient(180deg, #06101b20, #06101b88)    }
+ 
+    .garage-top {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 16px 18px;
+      border-bottom: 1px solid #243a54;
+      background: #091421c9;
+      color: #9cb2d0;
+      font-size: 10px;
+      letter-spacing: .12em;
+    }
+ 
+    .garage-top .sep { color: #456789; }
+ 
+    .pill {
+      padding: 4px 8px;
+      border: 1px solid #315479;
+      border-radius: 3px;
+      color: #8fdcff;
+      white-space: nowrap;
+    }
+ 
+    /* ---------- Art stage ---------- */
+    .art-stage {
+      position: relative;
+      display: grid;
+      place-items: center;
+      min-height: 300px;
+      overflow: hidden;
+      background: var(--stage-night);
+    }
+ 
+    .art-stage.blue-hour { background: var(--stage-blue-hour); }
+ 
+    /* Ground line */
+    .art-stage::after {
+      content: "";
+      position: absolute;
+      left: 12%;
+      right: 12%;
+      bottom: 9%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, #3979b7, #7bdcff, #3979b7, transparent);
+      box-shadow: 0 0 25px #4eaaff77;
+    }
+ 
+    .art {
+      position: relative;
+      z-index: 0;
+      display: block;
+      width: min(100%, 1000px);
+      height: auto;
+      max-height: 600px;
+      object-fit: contain;
+      transform: scale(1.01);
+      filter: saturate(1.1) contrast(1.04);
+      transition: filter .35s, transform .5s;
+    }
+ 
+    .art.lights-on {
+      filter: saturate(1.3) contrast(1.12) brightness(1.13) drop-shadow(0 0 15px #60baff44);
+    }
+ 
+    .rain {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+ 
+    .rain.off { display: none; }
+ 
+    .stage-label,
+    .corner {
+      position: absolute;
+      bottom: 18px;
+      z-index: 2;
+      font-size: 10px;
+    }
+ 
+    .stage-label {
+      left: 18px;
+      color: #9ab1cf;
+      letter-spacing: .12em;
+    }
+ 
+    .stage-label strong { color: #e4f3ff; }
+ 
+    .corner {
+      right: 18px;
+      color: #71d9ff;
+      line-height: 1.9;
+      text-align: right;
+    }
+ 
+    /* ---------- Controls ---------- */
+    .controls {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 1fr;
+      gap: 10px;
+      padding: 14px;
+      border-top: 1px solid #233950;
+      background: #08111d;
+    }
+ 
+    .control {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid #20344d;
+      background: #0c1929;
+      color: #c4d5ed;
+      font: inherit;
+      font-size: 11px;
+      text-align: left;
+      cursor: pointer;
+      transition: .2s;
+    }
+ 
+    .control:hover,
+    .control[aria-pressed="true"] {
+      border-color: var(--blue);
+      background: #102744;
+      box-shadow: inset 0 0 0 1px #438fe833;
+    }
+ 
+    .control:focus-visible {
+      outline: 2px solid var(--cyan);
+      outline-offset: 2px;
+    }
+ 
+    .control b {
+      color: #71d9ff;
+      font-size: 10px;
+      letter-spacing: .1em;
+    }
+ 
+    /* ---------- Info panels ---------- */
+    .lower {
+      display: grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: 16px;
+      margin: 20px 0 52px;
+    }
+ 
+    .panel {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: linear-gradient(145deg, #0d1929dd, #08111cdd);
+    }
+ 
+    .panel-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+ 
+    .panel h2 {
+      margin: 0;
+      font-size: 13px;
+      letter-spacing: .14em;
+      text-transform: uppercase;
+    }
+ 
+    .mini {
+      color: var(--muted);
+      font-size: 10px;
+    }
+ 
+    .panel-note {
+      margin: 18px 0 0;
+      line-height: 1.8;
+    }
+ 
+    .specs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+ 
+    .spec {
+      padding: 12px;
+      border: 1px solid #1d3047;
+      background: #0a1422;
+    }
+ 
+    .spec label {
+      display: block;
+      margin-bottom: 6px;
+      color: #8099ba;
+      font-size: 9px;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+ 
+    .spec strong {
+      font-size: 12px;
+      font-weight: 600;
+    }
+ 
+    .paint {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+ 
+    .paint strong {
+      display: block;
+      font-size: 12px;
+    }
+ 
+    .paint span {
+      color: var(--muted);
+      font-size: 10px;
+    }
+ 
+    .swatch {
+      width: 42px;
+      height: 42px;
+      border: 1px solid #79b7f5;
+      border-radius: 4px;
+      background: linear-gradient(135deg, #3978bd, #092347 70%);
+      box-shadow: 0 0 16px #2d79c544;
+    }
+ 
+    /* ---------- Footer & toast ---------- */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 0 26px;
+      border-top: 1px solid var(--line);
+      color: #657c9d;
+      font-size: 10px;
+      letter-spacing: .08em;
+    }
+ 
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      z-index: 5;
+      padding: 10px 14px;
+      border: 1px solid var(--blue);
+      background: #12243a;
+      color: var(--text);
+      font-size: 11px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 20px);
+      transition: .25s;
+    }
+ 
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+ 
+    /* ---------- Responsive ---------- */
+    @media (max-width: 700px) {
+      .topbar { padding: 16px 0; }
+      .status { font-size: 9px; }
+      .hero { padding-top: 30px; }
+      .garage-top { padding: 12px; font-size: 9px; }
+      .art-stage { min-height: 220px; }
+      .corner { font-size: 8px; }
+      .controls { grid-template-columns: 1fr; }
+      .control { padding: 12px; }
+      .lower { grid-template-columns: 1fr; }
+      .specs { grid-template-columns: repeat(2, 1fr); }
+      .footer { flex-direction: column; gap: 5px; }
+    }
+ 
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation: none !important;
+        scroll-behavior: auto !important;
+        transition: none !important;
+      }
+    }
+  </style>
+</head>
+ 
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brandmark">
+          <img src="emblem.png" alt="i30 logo">
+        </div>
+        <div>NIGHT GARAGE<small>i30/ 001</small></div>
+      </div>
+      <div class="status">
+        <span class="dot"></span> GARAGE ONLINE <span class="status-sep">//</span> ZAGREB, HR
+      </div>
+    </header>
+ 
+    <main>
+      <section class="hero">
+        <div class="eyebrow">[Hyundai / PDH-18 / Stargazing Blue]</div>
+        <h1>One car.<br><span>After dark.</span></h1>
+        <p class="intro">
+          A tiny digital garage for the 2018 Hyundai i30. Pixel-art bodywork,
+          rainy-night atmosphere, and a few switches to make it feel like yours.
+        </p>
+      </section>
+ 
+      <section class="garage" aria-label="Interactive i30 garage">
+        <div class="garage-top">
+          <span>VEHICLE VIEWER <span class="sep">/</span> 01</span>
+          <span class="pill" id="sceneTag">NIGHT / RAIN</span>
+        </div>
+ 
+        <div class="art-stage" id="stage">
+          <img
+            class="art"
+            id="carArt"
+            src="i30-stargazing-blue.png"
+            alt="Pixel-art concept board of a Stargazing Blue 2018 Hyundai i30, with front, side, rear and top views">
+          <canvas class="rain" id="rain" aria-hidden="true"></canvas>
+          <div class="stage-label"><strong>HYUNDAI i30</strong><br>2018 · 1.4 PETROL · MANUAL</div>
+          <div class="corner">PAINT: U3<br><span id="lightStatus">LIGHTS: OFF</span></div>
+        </div>
+ 
+        <div class="controls">
+          <button class="control" id="lightsBtn" aria-pressed="false">
+            <span>Headlight mood</span><b id="lightsValue">OFF ↗</b>
+          </button>
+          <button class="control" id="rainBtn" aria-pressed="true">
+            <span>Rain animation</span><b id="rainValue">ON ▾</b>
+          </button>
+          <button class="control" id="sceneBtn" aria-pressed="false">
+            <span>Garage ambience</span><b id="sceneValue">NIGHT ▾</b>
+          </button>
+        </div>
+      </section>
+ 
+      <section class="lower">
+        <div class="panel">
+          <div class="panel-head"><h2>Vehicle data</h2><span class="mini">FACTS / SPEC</span></div>
+          <div class="specs">
+            <div class="spec"><label>Model year</label><strong>2018</strong></div>
+            <div class="spec"><label>Engine</label><strong>1.4 Petrol</strong></div>
+            <div class="spec"><label>Transmission</label><strong>Manual</strong></div>
+            <div class="spec"><label>Body</label><strong>5-door hatch</strong></div>
+            <div class="spec"><label>Paint</label><strong>Stargazing Blue</strong></div>
+            <div class="spec"><label>Wheel fitment</label><strong>205/55 R16</strong></div>
+          </div>
+        </div>
+ 
+        <div class="panel">
+          <div class="panel-head"><h2>Paint lab</h2><span class="mini">COLOR PROFILE / U3</span></div>
+          <div class="paint">
+            <div class="swatch"></div>
+            <div><strong>Stargazing Blue</strong><span>Deep metallic blue · cool highlights</span></div>
+          </div>
+          <p class="mini panel-note">
+            The artwork is a stylized concept, not a factory color sample.
+            The lighting and screen can shift how the blue appears.
+          </p>
+        </div>
+      </section>
+    </main>
+ 
+    <footer class="footer">
+      <span>i30 // NIGHT GARAGE</span>
+      <span>BUILT FOR THE LOVE OF THE DRIVE</span>
+      <span>LOCAL PROJECT · NO TRACKING · NO SERVER</span>
+    </footer>
+  </div>
+ 
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+ 
+  <script>
+    const $ = (sel) => document.querySelector(sel);
+ 
+    const el = {
+      art: $('#carArt'),
+      rain: $('#rain'),
+      stage: $('#stage'),
+      sceneTag: $('#sceneTag'),
+      lightStatus: $('#lightStatus'),
+      toast: $('#toast'),
+      lightsBtn: $('#lightsBtn'),
+      lightsValue: $('#lightsValue'),
+      rainBtn: $('#rainBtn'),
+      rainValue: $('#rainValue'),
+      sceneBtn: $('#sceneBtn'),
+      sceneValue: $('#sceneValue'),
+    };
+ 
+    const state = { lights: false, raining: true, night: true };
+    let toastTimer;
+ 
+    function notify(message) {
+      el.toast.textContent = message;
+      el.toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.toast.classList.remove('show'), 1800);
+    }
+ 
+    /* ---------- Rain engine (canvas) ---------- */
+    const rainFx = (() => {
+      const ctx = el.rain.getContext('2d');
+      const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+      const LEAN = 0.16;          // horizontal drift per unit of fall (leans left)
+      const GROUND_LINE = 0.09;   // matches the glowing ground line (bottom: 9%)
+      let w = 0, h = 0, drops = [], splashes = [], raf = 0, last = 0;
+ 
+      const rand = (a, b) => a + Math.random() * (b - a);
+ 
+      function makeDrop(scatter) {
+        const z = Math.random();  // 0 = far, 1 = near
+        return {
+          z,
+          x: rand(0, w + h * LEAN),
+          y: scatter ? rand(0, h) : rand(-60, 0),
+          len: 8 + z * 20,
+          speed: 420 + z * 700,   // px per second
+          alpha: 0.14 + z * 0.4,
+          width: 0.6 + z * 0.9,
+          ground: h * (1 - GROUND_LINE) + z * h * 0.05  // near drops land lower
+        };
+      }
+ 
+      function resize() {
+        const rect = el.stage.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        w = rect.width;
+        h = rect.height;
+        el.rain.width = w * dpr;
+        el.rain.height = h * dpr;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        drops = Array.from({ length: Math.round((w * h) / 2600) }, () => makeDrop(true));
+        splashes = [];
+      }
+ 
+      function draw(dt) {
+        ctx.clearRect(0, 0, w, h);
+        ctx.lineCap = 'round';
+ 
+        for (const d of drops) {
+          d.y += d.speed * dt;
+          d.x -= d.speed * LEAN * dt;
+ 
+          if (d.y >= d.ground) {
+            if (d.z > 0.4 && Math.random() < 0.6) {
+              splashes.push({ x: d.x, y: d.ground, age: 0, z: d.z });
+            }
+            Object.assign(d, makeDrop(false), { x: rand(0, w + h * LEAN) });
+            continue;
+          }
+ 
+          ctx.strokeStyle = `rgba(150, 210, 255, ${d.alpha})`;
+          ctx.lineWidth = d.width;
+          ctx.beginPath();
+          ctx.moveTo(d.x, d.y);
+          ctx.lineTo(d.x + d.len * LEAN, d.y - d.len);
+          ctx.stroke();
+        }
+ 
+        splashes = splashes.filter((s) => (s.age += dt) < 0.35);
+        for (const s of splashes) {
+          const t = s.age / 0.35;
+          ctx.strokeStyle = `rgba(150, 210, 255, ${(1 - t) * 0.5 * s.z})`;
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.ellipse(s.x, s.y, 2 + t * 9 * s.z, (2 + t * 9 * s.z) * 0.3, 0, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+      }
+ 
+      function frame(now) {
+        const dt = Math.min((now - last) / 1000, 0.05);
+        last = now;
+        draw(dt);
+        raf = requestAnimationFrame(frame);
+      }
+ 
+      function start() {
+        if (raf) return;
+        resize();
+        if (reduceMotion.matches) { draw(0); return; }  // one still frame
+        last = performance.now();
+        raf = requestAnimationFrame(frame);
+      }
+ 
+      function stop() {
+        cancelAnimationFrame(raf);
+        raf = 0;
+        ctx.clearRect(0, 0, w, h);
+      }
+ 
+      new ResizeObserver(() => { if (raf) resize(); }).observe(el.stage);
+ 
+      return { start, stop };
+    })();
+ 
+    function render() {
+      const { lights, raining, night } = state;
+ 
+      el.art.classList.toggle('lights-on', lights);
+      el.lightsBtn.setAttribute('aria-pressed', lights);
+      el.lightsValue.textContent = lights ? 'ON ✦' : 'OFF ↗';
+      el.lightStatus.textContent = `LIGHTS: ${lights ? 'ON' : 'OFF'}`;
+ 
+      el.rain.classList.toggle('off', !raining);
+      raining ? rainFx.start() : rainFx.stop();
+      el.rainBtn.setAttribute('aria-pressed', raining);
+      el.rainValue.textContent = raining ? 'ON ▾' : 'OFF ↗';
+ 
+      el.stage.classList.toggle('blue-hour', !night);
+      el.sceneBtn.setAttribute('aria-pressed', !night);
+      el.sceneValue.textContent = night ? 'NIGHT ▾' : 'BLUE HOUR ▾';
+ 
+      el.sceneTag.textContent = `${night ? 'NIGHT' : 'BLUE HOUR'} / ${raining ? 'RAIN' : 'CLEAR'}`;
+    }
+ 
+    el.lightsBtn.addEventListener('click', () => {
+      state.lights = !state.lights;
+      render();
+      notify(state.lights ? 'Headlight mood boosted' : 'Headlight mood dimmed');
+    });
+ 
+    el.rainBtn.addEventListener('click', () => {
+      state.raining = !state.raining;
+      render();
+      notify(state.raining ? 'Rain switched on' : 'Rain cleared');
+    });
+ 
+    el.sceneBtn.addEventListener('click', () => {
+      state.night = !state.night;
+      render();
+      notify(state.night ? 'Night ambience selected' : 'Blue-hour ambience selected');
+    });
+ 
+    render();
+  </script>
+</body>
+</html>
